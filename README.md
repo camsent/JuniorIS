@@ -6,8 +6,8 @@ An app that promotes seeking a realtionship with a God that loves you
 
 | **Issue** | **Due date** | |
 | -- | -- | -- |
-| Intentional Stillness Periods | 2/19 |  |
-| Minimalist Interface | 2/26 |  |
+| Minimalist Interface | 2/19 |  |
+| Intentional Stillness Periods | 2/26 |  |
 | Smart Notification Management | 2/26 |  |
 | Stillness Period Timer  | 3/5 |  |
 | Reflection Prompts | 3/12 |  |
