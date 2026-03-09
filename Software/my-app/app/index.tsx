@@ -1,25 +1,32 @@
-import { Text, View, StyleSheet, Alert } from "react-native";
+import { Text, View, StyleSheet, Alert} from "react-native";
 import { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { Link } from "expo-router"
 import Button from "../Components/Button"
+import TimePickerModal from "@/Components/TimePickerModal";
+
 
 
 export default function Index() {
 
   const [timeLeft, setTimeLeft] = useState<number | null>(null); //timeLeft is the value, setTimeLeft is updating the value, value can either
+  const [modalVisible, setModalVisible] = useState(false);
 //be a number or null
-  const startStillness = () => {
-    Alert.alert( //popup
-      "Stillness Mode",
-      "Activate for 30 seconds?",
-      [
-        { text: "Cancel", style: "cancel"},
-        {
-          text: "OK",
-          onPress: () => setTimeLeft(5) //starts timer
-        }
-      ]
-    )
+  const startStillness = () => setModalVisible(true);
+  const handleConfirmTime = (seconds: number) => {
+    setTimeLeft(seconds);
+  };
+  //modal time formatting function
+  const formatTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60;
+
+    const h = hours.toString().padStart(2, "0")
+    const m = minutes.toString().padStart(2, "0")
+    const s = seconds.toString().padStart(2, "0")
+
+    return `${h}:${m}:${s}`;
   }
 
   useEffect (() => {
@@ -31,15 +38,21 @@ export default function Index() {
 
     return () => clearInterval(interval); //prevents multiple intervals running at once
   }, [timeLeft]) //run this effect whenever timeLeft changes
+
   return (
     <LinearGradient colors={["white", "grey"]} style={styles.container}>
+      <TimePickerModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onConfirm={handleConfirmTime}
+        />
       <Text style={styles.header}>GOD TIME</Text>
       
       <View style={styles.contentContainer}>
         <Button label="Stillness Mode" onPress={startStillness}/>
         {timeLeft !== null && timeLeft > 0 && ( //if timeLeft is not null and its greater than 0 show the timer
           <Text style={styles.timerText}>
-            {timeLeft}
+            {formatTime(timeLeft)}
           </Text>
         )}
       
@@ -56,7 +69,6 @@ export default function Index() {
           </Text>
         </View>
       </View>
-
     </LinearGradient>
   );
 }
