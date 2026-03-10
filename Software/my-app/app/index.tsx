@@ -1,5 +1,5 @@
-import { Text, View, StyleSheet, Alert} from "react-native";
-import { useState, useEffect } from "react";
+import { Text, View, StyleSheet, Alert, AppState} from "react-native";
+import { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router"
 import Button from "../Components/Button"
@@ -9,13 +9,20 @@ import TimePickerModal from "@/Components/TimePickerModal";
 
 export default function Index() {
 
-  const [timeLeft, setTimeLeft] = useState<number | null>(null); //timeLeft is the value, setTimeLeft is updating the value, value can either
+  const [timeLeft, setTimeLeft] = useState(0); //timeLeft is the value, setTimeLeft is updating the value, value can either be a number or null
+  const [endTime, setEndTime] = useState<number | null>(null);
+  const [initialTime, setInitialTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-//be a number or null
+  const appState = useRef(AppState.currentState);
+  const [interrupted, setInterrupted] = useState(false);
+  
   const startStillness = () => setModalVisible(true);
-  const handleConfirmTime = (seconds: number) => {
-    setTimeLeft(seconds);
-  };
+  const startStillnessTimer = (seconds: number) => {
+    const now = Date.now();
+    setEndTime(now + seconds * 1000);
+    setIsRunning(true);
+  }
   //modal time formatting function
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -29,22 +36,56 @@ export default function Index() {
     return `${h}:${m}:${s}`;
   }
 
-  useEffect (() => {
-    if (timeLeft === null || timeLeft === 0) return; //stops timer from running inf
+  useEffect(() => {
+    if (!isRunning || !endTime) return;
 
     const interval = setInterval(() => {
-      setTimeLeft(prev => (prev ? prev - 1 : 0));
-    }, 1000); //every second (1000 milliseconds) it decreases value by 1
+      const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+      setTimeLeft(remaining);
 
+      if (remaining <= 0) {
+        setIsRunning(false)
+        clearInterval(interval)
+      }
+    }, 1000)
     return () => clearInterval(interval); //prevents multiple intervals running at once
-  }, [timeLeft]) //run this effect whenever timeLeft changes
+  }, [isRunning, endTime]);
 
-  return (
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      //Only mark interrupted if stillness is running and user left the app (not just locked their phone)
+      if (isRunning && appState.current === "active" && nextState === "background") {
+        setInterrupted(true);
+      }
+
+      if (appState.current !== "active" && nextState === "active")  {
+        if (interrupted) {
+          Alert.alert(
+            "Stillness Interrupted",
+            "You left the app during stillness mode."
+          );
+          setIsRunning(false);
+          setTimeLeft(0);
+
+          setInterrupted(false);
+        }
+      }
+      appState.current = nextState;
+    });
+
+    return () => subscription.remove();
+  }, [isRunning, interrupted]);
+
+  return(
     <LinearGradient colors={["white", "grey"]} style={styles.container}>
       <TimePickerModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onConfirm={handleConfirmTime}
+        onConfirm={(seconds) => {
+          setInitialTime(seconds);
+          startStillnessTimer(seconds);
+          setModalVisible(false);
+        }}
         />
       <Text style={styles.header}>GOD TIME</Text>
       
@@ -55,6 +96,24 @@ export default function Index() {
             {formatTime(timeLeft)}
           </Text>
         )}
+        <View style={{flexDirection: "row", marginTop: 20}}>
+
+          <View style={{marginHorizontal: 10}}>
+            <Button
+              label={isRunning ? "Pause" : "Start"}
+              onPress={() => setIsRunning(!isRunning)}
+            />
+          </View>
+          <View style={{ marginHorizontal: 10 }}>
+            <Button
+              label="Quit"
+              onPress={() => {
+                setIsRunning(false);
+                setTimeLeft(initialTime);
+              }}
+            />
+          </View>
+        </View>
       
 
         <View style={styles.bottomContainer}>
