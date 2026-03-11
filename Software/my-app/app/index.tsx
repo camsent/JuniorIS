@@ -10,17 +10,17 @@ import TimePickerModal from "@/Components/TimePickerModal";
 export default function Index() {
 
   const [timeLeft, setTimeLeft] = useState(0); //timeLeft is the value, setTimeLeft is updating the value, value can either be a number or null
-  const [endTime, setEndTime] = useState<number | null>(null);
-  const [initialTime, setInitialTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const appState = useRef(AppState.currentState);
-  const [interrupted, setInterrupted] = useState(false);
+  const [endTime, setEndTime] = useState<number | null>(null); //stores timestamp when timer should end
+  const [initialTime, setInitialTime] = useState(0); //stores original timer duration chosen by user
+  const [isRunning, setIsRunning] = useState(false); //controls whether timer is currently active
+  const [modalVisible, setModalVisible] = useState(false); //controls whether modal is currently visible
+  const appState = useRef(AppState.currentState); //stores previous state of app, useRef stores a value without triggering a re-render
+  const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode
   
   const startStillness = () => setModalVisible(true);
   const startStillnessTimer = (seconds: number) => {
     const now = Date.now();
-    setEndTime(now + seconds * 1000);
+    setEndTime(now + seconds * 1000); //logic allows the timer to stay accurate even if the app isn't in an active state
     setIsRunning(true);
   }
   //modal time formatting function
@@ -37,22 +37,22 @@ export default function Index() {
   }
 
   useEffect(() => {
-    if (!isRunning || !endTime) return;
+    if (!isRunning || !endTime) return; //prevents timer from starting unless the timer is running, or a valid end time exists
 
     const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+      const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000)); //stores remaining time in seconds
       setTimeLeft(remaining);
 
       if (remaining <= 0) {
         setIsRunning(false)
-        clearInterval(interval)
+        clearInterval(interval) // so it stops executing
       }
     }, 1000)
     return () => clearInterval(interval); //prevents multiple intervals running at once
   }, [isRunning, endTime]);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextState) => {
+    const subscription = AppState.addEventListener("change", (nextState) => { //runs whenever app state changes
       //Only mark interrupted if stillness is running and user left the app (not just locked their phone)
       if (isRunning && appState.current === "active" && nextState === "background") {
         setInterrupted(true);
@@ -65,7 +65,7 @@ export default function Index() {
             "You left the app during stillness mode."
           );
           setIsRunning(false);
-          setTimeLeft(0);
+          setTimeLeft(0); //stop timer and reset display when user returns to the app
 
           setInterrupted(false);
         }
@@ -73,8 +73,8 @@ export default function Index() {
       appState.current = nextState;
     });
 
-    return () => subscription.remove();
-  }, [isRunning, interrupted]);
+    return () => subscription.remove(); //cleanup function
+  }, [isRunning, interrupted]); //tells React to recreate event listener whenever these values change
 
   return(
     <LinearGradient colors={["white", "grey"]} style={styles.container}>
