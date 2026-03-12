@@ -15,7 +15,7 @@ export default function Index() {
   const [isRunning, setIsRunning] = useState(false); //controls whether timer is currently active
   const [modalVisible, setModalVisible] = useState(false); //controls whether modal is currently visible
   const appState = useRef(AppState.currentState); //stores previous state of app, useRef stores a value without triggering a re-render
-  const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode
+  const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode, 
   
   const startStillness = () => setModalVisible(true);
   const startStillnessTimer = (seconds: number) => {
