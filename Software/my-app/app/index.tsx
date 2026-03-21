@@ -9,6 +9,8 @@ import TimePickerModal from "@/Components/TimePickerModal";
 
 export default function Index() {
 
+  type StillnessMode = "free" | "strict";
+
   const [timeLeft, setTimeLeft] = useState(0); //timeLeft is the value, setTimeLeft is updating the value, value can either be a number or null
   const [endTime, setEndTime] = useState<number | null>(null); //stores timestamp when timer should end
   const [initialTime, setInitialTime] = useState(0); //stores original timer duration chosen by user
@@ -16,6 +18,7 @@ export default function Index() {
   const [modalVisible, setModalVisible] = useState(false); //controls whether modal is currently visible
   const appState = useRef(AppState.currentState); //stores previous state of app, useRef stores a value without triggering a re-render
   const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode, 
+  const [mode, setMode] = useState<StillnessMode>("free"); //stores the current stillness mode, default is "free"
   
   const showStillnessModal = () => setModalVisible(true);
   const startStillnessTimer = (seconds: number) => {
@@ -83,10 +86,11 @@ export default function Index() {
       <TimePickerModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onConfirm={(seconds) => {
+        onConfirm={(seconds, selectedMode) => {
           setInitialTime(seconds);
           startStillnessTimer(seconds);
           setModalVisible(false);
+          setMode(selectedMode);
         }}
         />
       <Text style={styles.header}>GOD TIME</Text>

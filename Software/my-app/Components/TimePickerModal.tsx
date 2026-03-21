@@ -1,16 +1,25 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Modal, View, Text, StyleSheet, Button} from "react-native";
 import {Picker} from "@react-native-picker/picker"; //required for scroll wheel in modal
 
 type Props = {
     visible: boolean;
     onClose: () => void;
-    onConfirm: (seconds: number) => void; //sending time back to screen so the timer can be started
+    onConfirm: (seconds: number, mode: "free" | "strict") => void; //sending time back to screen so the timer can be started
 }
+
+type StillnessMode = "free" | "strict"; //moved this type definition here since it is only used in the modal, and it keeps the code more organized
 
 export default function TimePickerModal ({ visible, onClose, onConfirm}: Props){
     const [timeNumber, setTimeNumber] = useState(1) //stores numbers starting at 1 to select 
     const [timeUnit, setTimeUnit] = useState<"seconds" | "minutes" | "hours">("seconds"); //stores units of time to select
+    const [mode, setMode] = useState<StillnessMode>("free"); //stores stillness mode selected by user
+
+    useEffect(() => {
+        if (visible) {
+            setMode("free"); //reset mode to default whenever the modal is opened
+        }
+    }, [visible])
 
     return (
         <Modal //creates popup window
@@ -43,8 +52,24 @@ export default function TimePickerModal ({ visible, onClose, onConfirm}: Props){
                         <Picker.Item label="Minutes" value="minutes"color="black"/>
                         <Picker.Item label="Hours" value="hours"color="black"/>
                     </Picker>
-                    {/* Buttons */}
-                    <View style={{ flexDirection:"row", marginTop: 20}}>
+                    {/* Mode Selection */}
+                    <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 20 }}>
+                        <View style={{ marginHorizontal: 10 }}>
+                            <Button
+                                title="Free"
+                                onPress={() => setMode("free")}
+                            />
+                        </View>
+                        <View style={{ marginHorizontal: 10 }}>
+                            <Button
+                                title="Strict"
+                                onPress={() => setMode("strict")}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Action Buttons */}
+                    <View style={{ flexDirection:"row", marginTop: 20, justifyContent: "center" }}>
                         <View style={{ marginHorizontal: 10}}>
                             <Button title="Cancel" onPress={onClose} />
                         </View>
@@ -56,10 +81,10 @@ export default function TimePickerModal ({ visible, onClose, onConfirm}: Props){
                                     if (timeUnit === "minutes") totalSeconds *= 60;
                                     if (timeUnit === "hours") totalSeconds *= 3600;
 
-                                    onConfirm(totalSeconds);
+                                    onConfirm(totalSeconds, mode);
                                     onClose();
                                 }}
-                                />
+                            />
                         </View>
                     </View>
                 </View>
