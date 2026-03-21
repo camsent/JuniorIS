@@ -17,7 +17,7 @@ export default function Index() {
   const appState = useRef(AppState.currentState); //stores previous state of app, useRef stores a value without triggering a re-render
   const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode, 
   
-  const startStillness = () => setModalVisible(true);
+  const showStillnessModal = () => setModalVisible(true);
   const startStillnessTimer = (seconds: number) => {
     const now = Date.now();
     setEndTime(now + seconds * 1000); //logic allows the timer to stay accurate even if the app isn't in an active state
@@ -40,6 +40,7 @@ export default function Index() {
     if (!isRunning || !endTime) return; //prevents timer from starting unless the timer is running, or a valid end time exists
 
     const interval = setInterval(() => {
+      if (!endTime) return; //safety check to ensure endTime is valid before calculating remaining time
       const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000)); //stores remaining time in seconds
       setTimeLeft(remaining);
 
@@ -54,7 +55,7 @@ export default function Index() {
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => { //runs whenever app state changes
       //Only mark interrupted if stillness is running and user left the app (not just locked their phone)
-      if (isRunning && appState.current === "active" && nextState === "background") {
+      if (isRunning && appState.current === "active" && nextState === "inactive") {
         setInterrupted(true);
       }
 
@@ -66,6 +67,7 @@ export default function Index() {
           );
           setIsRunning(false);
           setTimeLeft(0); //stop timer and reset display when user returns to the app
+          setEndTime(null);
 
           setInterrupted(false);
         }
@@ -90,7 +92,7 @@ export default function Index() {
       <Text style={styles.header}>GOD TIME</Text>
       
       <View style={styles.contentContainer}>
-        <Button label="Stillness Mode" onPress={startStillness}/>
+        <Button label="Stillness Mode" onPress={showStillnessModal}/>
         {timeLeft !== null && timeLeft > 0 && ( //if timeLeft is not null and its greater than 0 show the timer
           <Text style={styles.timerText}>
             {formatTime(timeLeft)}
@@ -101,7 +103,18 @@ export default function Index() {
           <View style={{marginHorizontal: 10}}>
             <Button
               label={isRunning ? "Pause" : "Start"}
-              onPress={() => setIsRunning(!isRunning)}
+              onPress={() => {
+                if (isRunning) {
+                  //Pause
+                  setIsRunning(false);
+                  setInitialTime(timeLeft) //store remaining time as new initial time so when user hits start again it will resume from where they left off
+                  } else {
+                    //Resume
+                    const now = Date.now();
+                    setEndTime(now + timeLeft * 1000);
+                    setIsRunning(true);
+                  }
+              }}
             />
           </View>
           <View style={{ marginHorizontal: 10 }}>
@@ -109,7 +122,9 @@ export default function Index() {
               label="Quit"
               onPress={() => {
                 setIsRunning(false);
-                setTimeLeft(initialTime);
+                setTimeLeft(0);
+                setEndTime(null);
+                setInterrupted(false);
               }}
             />
           </View>
