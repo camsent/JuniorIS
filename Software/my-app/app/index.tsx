@@ -58,20 +58,19 @@ export default function Index() {
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => { //runs whenever app state changes
       //Only mark interrupted if stillness is running and user left the app (not just locked their phone)
-      if (isRunning && appState.current === "active" && nextState === "inactive") {
+      if (mode === "strict" && isRunning && appState.current === "active" && nextState !== "active") {
         setInterrupted(true);
       }
 
-      if (appState.current !== "active" && nextState === "active")  {
+      if (mode === "strict" && interrupted && nextState === "active")  {
         if (interrupted) {
           Alert.alert(
             "Stillness Interrupted",
-            "You left the app during stillness mode."
+            "You left the app during stillness mode. The session has ended"
           );
           setIsRunning(false);
           setTimeLeft(0); //stop timer and reset display when user returns to the app
           setEndTime(null);
-
           setInterrupted(false);
         }
       }
@@ -79,45 +78,66 @@ export default function Index() {
     });
 
     return () => subscription.remove(); //cleanup function
-  }, [isRunning, interrupted]); //tells React to recreate event listener whenever these values change
+  }, [mode, isRunning, interrupted]); //tells React to recreate event listener whenever these values change
 
-  return(
-    <LinearGradient colors={["white", "grey"]} style={styles.container}>
-      <TimePickerModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onConfirm={(seconds, selectedMode) => {
-          setInitialTime(seconds);
-          startStillnessTimer(seconds);
-          setModalVisible(false);
-          setMode(selectedMode);
-        }}
-        />
-      <Text style={styles.header}>GOD TIME</Text>
-      
-      <View style={styles.contentContainer}>
-        <Button label="Stillness Mode" onPress={showStillnessModal}/>
-        {timeLeft !== null && timeLeft > 0 && ( //if timeLeft is not null and its greater than 0 show the timer
-          <Text style={styles.timerText}>
-            {formatTime(timeLeft)}
-          </Text>
-        )}
-        <View style={{flexDirection: "row", marginTop: 20}}>
+  return (
+  <LinearGradient colors={["white", "grey"]} style={styles.container}>
+    <TimePickerModal
+      visible={modalVisible}
+      onClose={() => setModalVisible(false)}
+      onConfirm={(seconds, selectedMode) => {
+        setInitialTime(seconds);
+        startStillnessTimer(seconds);
+        setMode(selectedMode);
+        setModalVisible(false);
+      }}
+    />
 
-          <View style={{marginHorizontal: 10}}>
+    <Text style={styles.header}>GOD TIME</Text>
+
+    <View style={styles.contentContainer}>
+      {/* Stillness Mode Button */}
+      {!isRunning && (
+        <Button label="Stillness Mode" onPress={showStillnessModal} />
+      )}
+
+      {/* Timer Display */}
+      {timeLeft > 0 && (
+        <Text style={styles.timerText}>
+          {formatTime(timeLeft)}
+        </Text>
+      )}
+
+      {/* Mode Indicator */}
+      {isRunning && (
+        <Text
+          style={{
+            fontSize: 16,
+            marginTop: 10,
+            color: mode === "strict" ? "red" : "black",
+          }}
+        >
+          {mode === "strict" ? "Strict Mode" : "Free Mode"}
+        </Text>
+      )}
+
+      {/* Free Mode Controls */}
+      {mode === "free" && (
+        <View style={{ flexDirection: "row", marginTop: 20, justifyContent: "center" }}>
+          <View style={{ marginHorizontal: 10 }}>
             <Button
               label={isRunning ? "Pause" : "Start"}
               onPress={() => {
                 if (isRunning) {
-                  //Pause
+                  // Pause
                   setIsRunning(false);
-                  setInitialTime(timeLeft) //store remaining time as new initial time so when user hits start again it will resume from where they left off
-                  } else {
-                    //Resume
-                    const now = Date.now();
-                    setEndTime(now + timeLeft * 1000);
-                    setIsRunning(true);
-                  }
+                  setInitialTime(timeLeft); // store remaining time
+                } else {
+                  // Resume
+                  const now = Date.now();
+                  setEndTime(now + timeLeft * 1000);
+                  setIsRunning(true);
+                }
               }}
             />
           </View>
@@ -133,22 +153,37 @@ export default function Index() {
             />
           </View>
         </View>
-      
+      )}
 
-        <View style={styles.bottomContainer}>
-          <Text style={styles.bottomText}>
-            Come to Me, all you who labor and are heavy laden
-          </Text>
-          <Text style={styles.bottomText}>
-            and I will give you rest
-          </Text>
-          <Text style={styles.bottomText}>
-            Matthew 11:28
-          </Text>
-        </View>
+      {/* Strict Mode Indicator */}
+      {mode === "strict" && isRunning && (
+        <Text
+          style={{
+            marginTop: 20,
+            fontWeight: "600",
+            color: "red",
+            textAlign: "center",
+          }}
+        >
+          Strict Mode Active — Do Not Leave The App
+        </Text>
+      )}
+
+      {/* Bottom Text */}
+      <View style={styles.bottomContainer}>
+        <Text style={styles.bottomText}>
+          Come to Me, all you who labor and are heavy laden
+        </Text>
+        <Text style={styles.bottomText}>
+          and I will give you rest
+        </Text>
+        <Text style={styles.bottomText}>
+          Matthew 11:28
+        </Text>
       </View>
-    </LinearGradient>
-  );
+    </View>
+  </LinearGradient>
+);
 }
 
 
