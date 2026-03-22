@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Modal, View, Text, StyleSheet, Button} from "react-native";
+import {Modal, View, Text, StyleSheet, Button, Alert} from "react-native";
 import {Picker} from "@react-native-picker/picker"; //required for scroll wheel in modal
 
 type Props = {
@@ -81,8 +81,25 @@ export default function TimePickerModal ({ visible, onClose, onConfirm}: Props){
                                     if (timeUnit === "minutes") totalSeconds *= 60;
                                     if (timeUnit === "hours") totalSeconds *= 3600;
 
+                                    if (mode === "strict") {
+                                        Alert.alert(
+                                            "Prepare for Stillness",
+                                            "Consider enabling Do Not Disturb or a Focus Mode before beginning.",
+                                            [
+                                                {text: "Cancel" , style: "cancel"},
+                                                {
+                                                    text: "Begin",
+                                                    onPress: () => {
+                                                        onConfirm(totalSeconds, mode);
+                                                        onClose();
+                                                    }
+                                                }
+                                            ]
+                                        )
+                                    } else {
                                     onConfirm(totalSeconds, mode);
                                     onClose();
+                                    }
                                 }}
                             />
                         </View>
