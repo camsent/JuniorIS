@@ -1,7 +1,7 @@
 import { Text, View, StyleSheet, Alert, AppState} from "react-native";
 import { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router"
+import { useRouter } from "expo-router"
 import Button from "../Components/Button"
 import TimePickerModal from "@/Components/TimePickerModal";
 
@@ -19,6 +19,7 @@ export default function Index() {
   const appState = useRef(AppState.currentState); //stores previous state of app, useRef stores a value without triggering a re-render
   const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode, 
   const [mode, setMode] = useState<StillnessMode>("free"); //stores the current stillness mode, default is "free"
+  const router = useRouter();
   
   const showStillnessModal = () => setModalVisible(true);
   const startStillnessTimer = (seconds: number) => {
@@ -50,6 +51,7 @@ export default function Index() {
       if (remaining <= 0) {
         setIsRunning(false)
         clearInterval(interval) // so it stops executing
+        router.push("/reflection") //navigates to reflection screen when timer ends
       }
     }, 1000)
     return () => clearInterval(interval); //prevents multiple intervals running at once
