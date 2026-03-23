@@ -2,7 +2,7 @@ import { Text, View, StyleSheet, Alert, AppState} from "react-native";
 import { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router"
-import Button from "../Components/Button"
+import Button from "../../Components/Button"
 import TimePickerModal from "@/Components/TimePickerModal";
 
 
@@ -51,7 +51,7 @@ export default function Index() {
       if (remaining <= 0) {
         setIsRunning(false)
         clearInterval(interval) // so it stops executing
-        router.push("/reflection") //navigates to reflection screen when timer ends
+        router.push("/(tabs)/reflection") //navigates to reflection screen when timer ends
       }
     }, 1000)
     return () => clearInterval(interval); //prevents multiple intervals running at once
