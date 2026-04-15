@@ -15,6 +15,12 @@ export default function TabLayout() {
         title: "Reflection",
       }}
       />
+      <Tabs.Screen
+      name="stats"
+      options={{
+        title: "Stats",
+      }}
+      />
     </Tabs>
   )
 }
