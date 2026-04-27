@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router"
 import Button from "../../Components/Button"
 import TimePickerModal from "@/Components/TimePickerModal";
+import { useSessions } from "@/context/SessionContext";
 
 
 
@@ -20,6 +21,8 @@ export default function Index() {
   const [interrupted, setInterrupted] = useState(false); //tracks whether the user left the app during stillness mode, 
   const [mode, setMode] = useState<StillnessMode>("free"); //stores the current stillness mode, default is "free"
   const router = useRouter();
+  const { addSession } = useSessions();
+  const { sessions } = useSessions();
   
   const showStillnessModal = () => setModalVisible(true);
   const startStillnessTimer = (seconds: number) => {
@@ -51,6 +54,15 @@ export default function Index() {
       if (remaining <= 0) {
         setIsRunning(false)
         clearInterval(interval) // so it stops executing
+
+        addSession({ //validating that a stillness session was completed
+          duration: initialTime,
+          completed: true,
+          mode: mode,
+          timestamp: Date.now(),
+        });
+
+
         router.push("/(tabs)/reflection") //navigates to reflection screen when timer ends
       }
     }, 1000)
@@ -96,6 +108,7 @@ export default function Index() {
     />
 
     <Text style={styles.header}>GOD TIME</Text>
+
 
     <View style={styles.contentContainer}>
       {/* Stillness Mode Button */}
