@@ -20,5 +20,7 @@ An app that promotes seeking a realtionship with a God that loves you
 
 ### How to Run
 cd to my-app folder
+
 for ExpoGo app run: npx expo start (--tunnel if needed)
+
 for web browser run: npx expo start (press W after it loads up)
