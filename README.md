@@ -17,3 +17,8 @@ An app that promotes seeking a realtionship with a God that loves you
 | Journaling Feature | 4/12 |  |
 | Customizable Stillness Modes | 4/19 |  |
 | [Example issue description with link](https://github.com/hmm34/example-annotated-bibliography/issues/1) | 9/1/25 | |
+
+### How to Run
+cd to my-app folder
+for ExpoGo app run: npx expo start (--tunnel if needed)
+for web browser run: npx expo start (press W after it loads up)
